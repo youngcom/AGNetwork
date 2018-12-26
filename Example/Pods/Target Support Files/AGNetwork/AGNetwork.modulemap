@@ -1,0 +1,6 @@
+framework module AGNetwork {
+  umbrella header "AGNetwork-umbrella.h"
+
+  export *
+  module * { export * }
+}
