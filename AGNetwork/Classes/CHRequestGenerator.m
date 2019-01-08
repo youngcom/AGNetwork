@@ -134,34 +134,36 @@
 }
 
 - (NSDictionary *)getValidParams:(NSDictionary *)param{
-    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithDictionary:param];
+    //    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithDictionary:param];
     NSDictionary *commonDic = [CHNetworkingConfig shardInstance].commonParams;
     
-    for (int i= 0; i < (int)commonDic.allKeys.count; i ++) {
-        NSString *value = [commonDic valueForKey:commonDic.allKeys[i]];
-        NSString *key = commonDic.allKeys[i];
-        [dic setObject:value forKey:key];
-    }
-    if ([CHNetworkingConfig shardInstance].encryptType == 0) {
-        return [dic copy];
-    }
-    NSLog(@"请求参数---->%@",dic);
-    NSData *data = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:nil];
-//    NSString *jsonString = [[NSString alloc]initWithData:data encoding:NSUTF8StringEncoding];
-    NSData *encrypted = [data ch_encryptedWith3DESUsingKey:[CHNetworkingConfig shardInstance].secretKey andIV:[[CHNetworkingConfig shardInstance].offset dataUsingEncoding:NSUTF8StringEncoding]];
-    NSString *baseDESStr = [encrypted ch_base64EncodedString];
+    //    for (int i= 0; i < (int)commonDic.allKeys.count; i ++) {
+    //        NSString *value = [commonDic valueForKey:commonDic.allKeys[i]];
+    //        NSString *key = commonDic.allKeys[i];
+    //        [dic setObject:value forKey:key];
+    //    }
     NSMutableDictionary *paramDic = [NSMutableDictionary dictionary];
     for (int i= 0; i < (int)commonDic.allKeys.count; i ++) {
         NSString *value = [commonDic valueForKey:commonDic.allKeys[i]];
         NSString *key = commonDic.allKeys[i];
         [paramDic setObject:value forKey:key];
     }
-//    if ([CHNetworkingConfig shardInstance].token) {
-//        NSString *token = [CHNetworkingConfig shardInstance].token;
-//        [paramDic setValue:token forKey:@"token"];
-//    }
-    [paramDic setObject:baseDESStr forKey:[CHNetworkingConfig shardInstance].dataKey];
-    NSLog(@"加密后请求参数---->%@",paramDic);
+    
+    if ([CHNetworkingConfig shardInstance].encryptType == 0) {
+        [paramDic setObject:param forKey:[CHNetworkingConfig shardInstance].dataKey];
+        NSLog(@"请求参数---->%@",paramDic);
+    }else if ([CHNetworkingConfig shardInstance].encryptType == CHEncryptType3DES){
+        NSLog(@"加密前请求参数---->%@",param);
+        NSData *data = [NSJSONSerialization dataWithJSONObject:param options:NSJSONWritingPrettyPrinted error:nil];
+        NSData *encrypted = [data ch_encryptedWith3DESUsingKey:[CHNetworkingConfig shardInstance].secretKey andIV:[[CHNetworkingConfig shardInstance].offset dataUsingEncoding:NSUTF8StringEncoding]];
+        NSString *baseDESStr = [encrypted ch_base64EncodedString];
+        [paramDic setObject:baseDESStr forKey:[CHNetworkingConfig shardInstance].dataKey];
+        NSLog(@"加密后请求参数---->%@",paramDic);
+    }else{
+        [paramDic setObject:param forKey:[CHNetworkingConfig shardInstance].dataKey];
+        NSLog(@"请求参数---->%@",paramDic);
+    }
+    
     return [paramDic copy];
 }
 
